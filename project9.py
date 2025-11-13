@@ -1,5 +1,4 @@
 import os
-
 from library.functions import calc_balance, financial_status
 from library.classes_9 import Budget
 

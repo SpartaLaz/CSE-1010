@@ -15,8 +15,16 @@ def window2(name):
     income_entry = tk.Entry(window, width=50, bg="white", fg="black")
 
     def income_submit():
-        income = income_entry.get()
+        while True:
+            income = income_entry.get()
+            try:
+                float(income)  
+                break
+            except ValueError:
+                income_label.config(text="Please enter a valid number!", fg="red")
+                return
         print("PLACEHOLDER INCOME IS", income)
+
 
     income_button = tk.Button(window, text="Submit", bg="white", fg="black", command=income_submit)
 

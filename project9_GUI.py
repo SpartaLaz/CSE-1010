@@ -1,10 +1,13 @@
 import tkinter as tk
+from library.classes_9 import Budget
+
+all_budgets = {}
 
 window = tk.Tk()
 window.title("Budget Buddy")
 window.geometry("840x500")
 window.configure(bg="lightblue")
-
+expense_obj = ""
 
 #screen 2
 def window2(name):
@@ -24,6 +27,7 @@ def window2(name):
                 income_label.config(text="Please enter a valid number!", fg="red")
                 return
         print("PLACEHOLDER INCOME IS", income)
+        window_expense_type()
 
     income_button = tk.Button(window, text="Submit", bg="white", fg="black", command=income_submit)
 
@@ -33,7 +37,79 @@ def window2(name):
     income_entry.pack()
     income_button.pack()
 
+#screen 3
+def window_expense_type():
+    #gets rid of all previous widgets without needing to call every singe one
+    for widget in window.winfo_children():
+        widget.destroy()
 
+    label = tk.Label(window, text="Enter an expense type that you want to add:", font=("Arial", 32, "bold"), bg="lightblue", fg="black")
+    status_label = tk.Label(window, text="", font=("Arial", 28, "bold"), bg="lightblue", fg="black")
+    type_entry = tk.Entry(window, width=50, bg="white", fg="black")
+
+    def submit_type():
+        global expense_obj
+        type = type_entry.get().strip()
+        global budget_obj
+        budget_obj = Budget(type)
+        all_budgets[type] = budget_obj
+
+        if type == "":
+            status_label.config(text="Entry type cannot be empty!", fg="red")
+            return
+    # store in the backend budget() method **delete this comment once this is finished please**
+        expense_obj = type
+            
+        print("STORED EXPENSE TYPE =", type)
+
+        #window 4
+        window_expenses_nametype()
+
+    button = tk.Button(window, text="Submit", command=submit_type)
+    label.pack(pady=40)
+    status_label.pack()
+    type_entry.pack()
+    button.pack()
+
+def window_expenses_nametype():
+    #lets the user enter as many items until they click the finish button
+    for widget in window.winfo_children():
+        widget.destroy()
+    label = tk.Label(window, text=f"Adding expenses for {expense_obj}:", font=("Arial", 32, "bold"), bg="lightblue", fg="black")
+    instruction = tk.Label(window, text="Add expenses in 'type price' format (e.g Milk 20)", font=("Arial", 28, "bold"), bg="lightblue", fg="black")
+    status_label = tk.Label(window, text="", font=("Arial", 28, "bold"), bg="lightblue", fg="black")
+    entry = tk.Entry(window, width=50, bg="white", fg="black")  
+
+    def add():
+        text = entry.get().strip()
+        try:
+            category, price = text.split()
+            float(price)
+        except:
+            status_label.config(text="ENTER IN (TYPE COST) FORMAT", fg="red")
+            return
+        
+        budget_obj.categories.append(category)
+        budget_obj.expenses.append(float(price))
+        print("EXPENSES ADDED", category, price)
+        entry.delete(0, "end")
+
+    add_btn = tk.Button(window, text="Add Expense", command=add)
+
+    label.pack(pady=30)
+    instruction.pack()
+    status_label.pack()
+    entry.pack()
+    add_btn.pack(padx=10)
+
+    finish_btn = tk.Button(window, text="Finish Category and Add Another", command=window_expense_type)
+
+    report_btn = tk.Button(window, text="Finish and View Report", command=window_final_report)
+
+    finish_btn.pack(pady=5)
+    report_btn.pack(pady=5)
+
+    
 
 welcome_label = tk.Label(window, text="Welcome to Budget Buddy!", font=("Arial", 40, "bold"), bg="lightblue", fg="black")
 
@@ -57,6 +133,28 @@ def submit_name_next_window():
 
 submit_button = tk.Button(window, text="Submit", bg="lightblue", command=submit_name_next_window)
 
+def window_final_report():
+    for widget in window.winfo_children():
+        widget.destroy()
+
+    title = tk.Label(window, text="Your Budget Report", font=("Arial", 40, "bold"), bg="lightblue", fg="black")
+    title.pack(pady=20)
+
+    report_box = tk.Text(window, width=80, height=20, bg="white", fg="black")   
+    report_box.pack()
+
+    report_box.insert(tk.END, "==== FULL BUDGET REPORT ====\n\n")
+    total = 0
+
+    for category_name, obj in all_budgets.items():
+        report_box.insert(tk.END, f"--- Expenses for {category_name} ---\n")
+
+        for cat, price in zip(obj.categories, obj.expenses):
+            report_box.insert(tk.END, f"{cat}: {price}\n")
+            total += price
+
+
+
 # Layout screen 1
 welcome_label.pack(pady=40)
 name_label.pack()
@@ -66,4 +164,3 @@ submit_button.pack()
 
 
 window.mainloop()
-

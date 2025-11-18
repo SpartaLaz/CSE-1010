@@ -26,7 +26,7 @@ def window2(name):
             except ValueError:
                 income_label.config(text="Please enter a valid number!", fg="red")
                 return
-        print("PLACEHOLDER INCOME IS", income)
+        print("PLACEHOLDER INCOME IS ", income)
         window_expense_type()
 
     income_button = tk.Button(window, text="Submit", bg="white", fg="black", command=income_submit)

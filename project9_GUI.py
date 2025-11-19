@@ -1,87 +1,102 @@
 import tkinter as tk
-from library.classes_9 import Budget  # Import the Budget class from your library folder
+from library.classes_9 import Budget   # Import your Budget class
 
-# Dictionary to store all created budget categories
+# ===============================
+# Create file automatically
+# ===============================
+open("expenses.txt", "a").close()
+
+# Dictionary storing ALL Budget objects
 all_budgets = {}
 
-# Create the main window
+# Global variables SO FINAL PAGE CAN USE THEM
+global_income = 0.0      # User's income
+expense_obj = ""         # Current category name
+
+# Main window configuration
 window = tk.Tk()
 window.title("Budget Buddy")
 window.geometry("840x500")
 window.configure(bg="lightblue")
 
-expense_obj = ""  # Stores the current expense category name
 
-# THE INCOME SCREEN 
+# ==================================================
+# Helper function — write expense into a text file
+# ==================================================
+def write_expense_to_file(category, item, price):
+    with open("expenses.txt", "a") as f:
+        f.write(f"{category},{item},{price}\n")
+
+
+# ==================================================
+# SCREEN 2 — Income Screen
+# ==================================================
 def window2(name):
-    # Greeting label using the name entered from the first screen
+
     welcome_label = tk.Label(window, text=f"Hey {name}, Welcome to Budget Buddy!",
                              font=("Arial", 32, "bold"), bg="lightblue", fg="black")
-    
-    # Ask for monthly income
+
     income_label = tk.Label(window, text="Please Enter your Monthly Income!",
                             font=("Arial", 28, "bold"), bg="lightblue", fg="black")
 
     income_entry = tk.Entry(window, width=50, bg="white", fg="black")
 
-    # Function runs when user submits their income
     def income_submit():
+        global global_income
+
         while True:
             income = income_entry.get()
             try:
-                float(income)  # Validate income as a number
+                global_income = float(income)   # STORE income
                 break
             except ValueError:
-                # If invalid show red warning text
                 income_label.config(text="Please enter a valid number!", fg="red")
                 return
 
-        print("PLACEHOLDER INCOME IS ", income)
-        window_expense_type()  # Move to next screen
+        print("INCOME STORED:", global_income)
+        window_expense_type()
 
-    # Submit button
-    income_button = tk.Button(window, text="Submit", bg="white", fg="black", command=income_submit)
+    income_button = tk.Button(window, text="Submit", bg="white",
+                              fg="black", command=income_submit)
 
-    # Display items on the window
     welcome_label.pack(pady=40)
     income_label.pack()
     income_entry.pack()
     income_button.pack()
 
 
-# CHOOSE EXPENSE CATEGORY SCREEN 
+# ==================================================
+# SCREEN 3 — Choose Expense Category
+# ==================================================
 def window_expense_type():
-    # Clears the window so the new screen can be shown
+
+    # Clear screen
     for widget in window.winfo_children():
         widget.destroy()
 
-    label = tk.Label(window, text="Enter an expense type that you want to add:",
+    label = tk.Label(window, text="Enter an expense type you want to add:",
                      font=("Arial", 32, "bold"), bg="lightblue", fg="black")
-    status_label = tk.Label(window, text="", font=("Arial", 28, "bold"),
+
+    status_label = tk.Label(window, text="", font=("Arial", 25, "bold"),
                             bg="lightblue", fg="black")
-    
+
     type_entry = tk.Entry(window, width=50, bg="white", fg="black")
 
-    # Runs when the user inputs a category (like "Food")
     def submit_type():
-        global expense_obj
-        type = type_entry.get().strip()
+        global expense_obj, budget_obj
 
-        # Create a new Budget object for this category
-        global budget_obj
-        budget_obj = Budget(type)
+        category_type = type_entry.get().strip()
 
-        # Store it in dictionary so reports later can use it
-        all_budgets[type] = budget_obj
-
-        # If the field was empty - show error
-        if type == "":
+        if category_type == "":
             status_label.config(text="Entry type cannot be empty!", fg="red")
             return
-        
-        # Save category name and move to next screen
-        expense_obj = type
-        print("STORED EXPENSE TYPE =", type)
+
+        budget_obj = Budget(category_type)
+        all_budgets[category_type] = budget_obj
+
+        expense_obj = category_type
+        print("CATEGORY CREATED:", expense_obj)
+
         window_expenses_nametype()
 
     button = tk.Button(window, text="Submit", command=submit_type)
@@ -92,94 +107,102 @@ def window_expense_type():
     button.pack()
 
 
-# ADD EXPENSES TO CATEGORY SCREEN 
+# ==================================================
+# SCREEN 4 — Add Expenses to Category
+# ==================================================
 def window_expenses_nametype():
-    # Clear previous screen
+
+    # Clear
     for widget in window.winfo_children():
         widget.destroy()
 
     label = tk.Label(window, text=f"Adding expenses for {expense_obj}:",
                      font=("Arial", 32, "bold"), bg="lightblue", fg="black")
 
-    instruction = tk.Label(window, 
-        text="Add expenses in 'type price' format (e.g Milk 20)",
-        font=("Arial", 28, "bold"), bg="lightblue", fg="black")
+    instruction = tk.Label(window,
+        text="Add expenses in 'item price' format (e.g. Milk 20)",
+        font=("Arial", 25, "bold"), bg="lightblue", fg="black")
 
-    status_label = tk.Label(window, text="", font=("Arial", 28, "bold"),
+    status_label = tk.Label(window, text="", font=("Arial", 25, "bold"),
                             bg="lightblue", fg="black")
 
     entry = tk.Entry(window, width=50, bg="white", fg="black")
 
-    # Adds the typed item + price to the budget object
     def add():
         text = entry.get().strip()
 
         try:
-            category, price = text.split()
-            float(price)  # Validate price
+            item, price = text.split()
+            float(price)
         except:
-            status_label.config(text="ENTER IN (TYPE COST) FORMAT", fg="red")
+            status_label.config(text="ENTER IN (ITEM PRICE) FORMAT", fg="red")
             return
-        
-        # Store category + price in the Budget object
-        budget_obj.categories.append(category)
+
+        budget_obj.categories.append(item)
         budget_obj.expenses.append(float(price))
 
-        print("EXPENSES ADDED", category, price)
+        write_expense_to_file(expense_obj, item, price)
 
-        entry.delete(0, "end")  # Clear the entry box
+        print("EXPENSE ADDED:", item, price)
+        entry.delete(0, "end")
 
     add_btn = tk.Button(window, text="Add Expense", command=add)
 
-    # Place widgets
     label.pack(pady=30)
     instruction.pack()
     status_label.pack()
     entry.pack()
-    add_btn.pack(padx=10)
+    add_btn.pack(pady=10)
 
-    # Button to go back and add a NEW category
-    finish_btn = tk.Button(window, text="Finish Category and Add Another", 
+    finish_btn = tk.Button(window, text="Finish Category and Add Another",
                            command=window_expense_type)
 
-    # Button to finish the entire program and show final report
-    report_btn = tk.Button(window, text="Finish and View Report", 
+    report_btn = tk.Button(window, text="Finish and View Report",
                            command=window_final_report)
 
     finish_btn.pack(pady=5)
     report_btn.pack(pady=5)
 
 
-# THE WELCOME SCREEN 
+# ==================================================
+# SCREEN 1 — Welcome
+# ==================================================
 welcome_label = tk.Label(window, text="Welcome to Budget Buddy!",
                          font=("Arial", 40, "bold"), bg="lightblue", fg="black")
 
-name_label = tk.Label(window, text="Enter your name:", font=("Arial", 30, "bold"),
-                      bg="lightblue", fg="black")
+name_label = tk.Label(window, text="Enter your name:",
+                      font=("Arial", 30, "bold"), bg="lightblue", fg="black")
 
 name_entry = tk.Entry(window, width=50, bg="white", fg="black")
 
-# When user hits submit then go to next window
+
 def submit_name_next_window():
     name = name_entry.get()
-    print("PLACEHOLDER NAME IS", name)
+    print("USER NAME:", name)
 
-    # Remove welcome screen widgets
     welcome_label.destroy()
     name_entry.destroy()
     name_label.destroy()
     submit_button.destroy()
 
-    # Move to income screen
     window2(name)
+
 
 submit_button = tk.Button(window, text="Submit", bg="lightblue",
                           command=submit_name_next_window)
 
+welcome_label.pack(pady=40)
+name_label.pack()
+name_entry.pack()
+submit_button.pack()
 
-# THE FINAL REPORT SCREEN 
+
+# ==================================================
+# FINAL REPORT SCREEN
+# ==================================================
 def window_final_report():
-    # Clear all widgets
+
+    # Clear screen
     for widget in window.winfo_children():
         widget.destroy()
 
@@ -187,30 +210,35 @@ def window_final_report():
                      font=("Arial", 40, "bold"), bg="lightblue", fg="black")
     title.pack(pady=20)
 
-    # Text box where all expenses will be listed
-    report_box = tk.Text(window, width=80, height=20, bg="white", fg="black")
+    report_box = tk.Text(window, width=80, height=20,
+                         bg="white", fg="black")
     report_box.pack()
 
     report_box.insert(tk.END, "==== FULL BUDGET REPORT ====\n\n")
-    total = 0
 
-    # Loop through each Budget object and print its items
-    # category_name = dictionary key (e.g. "Food")
-    # obj = the actual Budget object (with categories + expenses inside)
+    total_expenses = 0
+
     for category_name, obj in all_budgets.items():
-        report_box.insert(tk.END, f"--- Expenses for {category_name} ---\n")
+        report_box.insert(tk.END, f"--- {category_name} ---\n")
 
-        # zip() pairs up each category name with its matching price
-        for cat, price in zip(obj.categories, obj.expenses):
-            report_box.insert(tk.END, f"{cat}: {price}\n")
-            total += price
+        for item, price in zip(obj.categories, obj.expenses):
+            report_box.insert(tk.END, f"{item}: ${price}\n")
+            total_expenses += price
+
+    report_box.insert(tk.END, "\n===========================\n")
+    report_box.insert(tk.END, f"Total Expenses: ${total_expenses}\n")
+    report_box.insert(tk.END, f"Income: ${global_income}\n")
+
+    savings = global_income - total_expenses
+    report_box.insert(tk.END, f"Savings: ${savings}\n")
+
+    if savings > 0:
+        report_box.insert(tk.END, "\n🎉 You are saving money! Great job!\n")
+    elif savings < 0:
+        report_box.insert(tk.END, "\n⚠️ You are overspending! Try to adjust your budget.\n")
+    else:
+        report_box.insert(tk.END, "\nYou are breaking even.\n")
 
 
-# STARTUP SCREEN PACK 
-welcome_label.pack(pady=40)
-name_label.pack()
-name_entry.pack()
-submit_button.pack()
-
-# Start the GUI loop
+# Start GUI
 window.mainloop()
